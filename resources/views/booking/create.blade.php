@@ -196,7 +196,7 @@
                     <span class="bg-[#1A3B32] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">3</span>
                     Pilih Tanggal Reservasi
                 </h3>
-                <input id="booking_date" type="date" required
+                <input id="booking_date" name="booking_date" type="date" required
                        min="{{ $today->toDateString() }}"
                        max="{{ $maximumBookingDate->toDateString() }}"
                        value="{{ $selectedDateFrom ?: $today->toDateString() }}"
@@ -212,34 +212,27 @@
                 <p class="mb-4 text-sm text-gray-500">Slot diperbarui otomatis setelah memilih layanan, stylist, atau tanggal.</p>
                 <p class="mb-3 hidden text-sm text-[#1A3B32]" data-loading-slots role="status">Memuat jadwal tersedia...</p>
 
-                @php
-                    $bookingDate = $selectedDateFrom ?: $today->toDateString();
-                    $dailySlots = $slots->filter(fn ($slot) => \Carbon\Carbon::parse($slot->tanggal)->toDateString() === $bookingDate);
-                @endphp
+                @php $bookingDate = $selectedDateFrom ?: $today->toDateString(); @endphp
                 @if(!$selectedStylistId || empty($selectedServiceIds))
                     <div class="text-center py-8 bg-gray-50 rounded-xl border border-gray-100">
                         <p class="text-gray-500">Pilih layanan dan stylist untuk melihat jam yang tersedia.</p>
                     </div>
-                @elseif($dailySlots->isEmpty())
+                @elseif($availableStartTimes->isEmpty())
                     <div class="text-center py-8 bg-gray-50 rounded-xl border border-gray-100">
                         <p class="text-gray-500">Tidak ada slot yang tersedia untuk tanggal ini. Silakan pilih tanggal lain.</p>
                     </div>
                 @else
-                    <div class="bg-gray-50/70 p-5 rounded-2xl border border-gray-100 space-y-4" data-slot-list>
-                        <h4 class="font-semibold text-gray-900">{{ \Carbon\Carbon::parse($bookingDate)->translatedFormat('l, d F Y') }}</h4>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                            @foreach($dailySlots as $slot)
-                                <label class="relative cursor-pointer group">
-                                    <input type="radio" name="slot_id" value="{{ $slot->id }}" class="peer sr-only" @checked((string) old('slot_id') === (string) $slot->id)>
-                                    <div class="border border-gray-200 bg-white rounded-xl p-3 text-center hover:border-[#E76F51] hover:bg-[#E76F51]/5 transition peer-checked:border-[#E76F51] peer-checked:bg-[#E76F51]/10 shadow-xs">
-                                        <span class="font-bold text-sm text-gray-900 block">
-                                            {{ \Carbon\Carbon::parse($slot->jam_mulai)->format('H:i') }} - {{ $selectedDurationMinutes > 0 ? \Carbon\Carbon::parse($slot->jam_mulai)->addMinutes($selectedDurationMinutes)->format('H:i') : \Carbon\Carbon::parse($slot->jam_selesai)->format('H:i') }}
-                                        </span>
-                                        <span class="text-[11px] text-emerald-600 font-medium mt-0.5 block">Tersedia</span>
-                                    </div>
-                                </label>
+                    <div class="max-w-sm">
+                        <label for="booking_time" class="mb-1.5 block text-sm font-medium text-gray-700">Jam Reservasi</label>
+                        <select id="booking_time" name="booking_time" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#E76F51] focus:ring-[#E76F51]">
+                            <option value="">Pilih jam</option>
+                            @foreach($availableStartTimes as $availableTime)
+                                <option value="{{ $availableTime['time'] }}" data-slot-id="{{ $availableTime['slot_id'] }}" @selected(old('booking_time') === $availableTime['time'])>
+                                    {{ $availableTime['label'] }}
+                                </option>
                             @endforeach
-                        </div>
+                        </select>
+                        <input type="hidden" id="slot_id" name="slot_id" value="{{ old('slot_id') }}">
                     </div>
                 @endif
             </div>
@@ -350,6 +343,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const serviceInputs = Array.from(document.querySelectorAll('input[name="service_ids[]"]'));
     const stylistSelect = document.getElementById('stylist_id');
     const dateInput = document.getElementById('booking_date');
+    const bookingTime = document.getElementById('booking_time');
+    const slotInput = document.getElementById('slot_id');
     const countLabel = document.querySelector('[data-service-count]');
     const durationLabel = document.querySelector('[data-service-duration]');
     const loadingLabel = document.querySelector('[data-loading-slots]');
@@ -403,6 +398,11 @@ document.addEventListener('DOMContentLoaded', function () {
         cashWarning.classList.toggle('hidden', !selected || selected.value !== 'tunai');
     }
     paymentInputs.forEach(input => input.addEventListener('change', updateCashWarning));
+    if (bookingTime) {
+        bookingTime.addEventListener('change', function () {
+            slotInput.value = bookingTime.selectedOptions[0]?.dataset.slotId || '';
+        });
+    }
     updateCashWarning();
     updateSummary();
 
@@ -415,9 +415,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!stylistSelect.value) {
                 event.preventDefault(); alert('Silakan pilih stylist.'); return;
             }
-            if (!form.querySelector('input[name="slot_id"]:checked')) {
+            if (!bookingTime?.value || !bookingTime.selectedOptions[0]?.dataset.slotId) {
                 event.preventDefault(); alert('Silakan pilih jam reservasi yang tersedia.');
+                return;
             }
+            slotInput.value = bookingTime.selectedOptions[0].dataset.slotId;
         });
     }
 });

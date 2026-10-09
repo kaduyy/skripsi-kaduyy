@@ -193,8 +193,10 @@ class BookingController extends Controller
             ? $transactionDpTotal
             : (float) $booking->dp_amount;
         $bookingDurationMinutes = (int) ($booking->durasi_total_menit ?: $booking->services->sum('pivot.durasi_menit'));
-        $bookingEnd = \Carbon\Carbon::parse($booking->tanggal_kunjungan . ' ' . $booking->jam_kunjungan, 'Asia/Jakarta')
-            ->addMinutes($bookingDurationMinutes);
+        $bookingEnd = $booking->jam_kunjungan
+            ? \Carbon\Carbon::parse($booking->tanggal_kunjungan . ' ' . $booking->jam_kunjungan, 'Asia/Jakarta')
+                ->addMinutes($bookingDurationMinutes)
+            : null;
 
         return view(
             'admin.bookings.show',

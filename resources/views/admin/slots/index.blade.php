@@ -19,12 +19,12 @@
             </div>
             <div>
                 <h4 class="text-lg font-semibold text-gray-900 leading-tight">Generasi Jadwal Booking Otomatis</h4>
-                <p class="text-xs text-gray-500 mt-1">Sistem membuat slot per jam untuk stylist yang dipilih.</p>
+                <p class="text-xs text-gray-500 mt-1">Default otomatis 07:00-20:00. Admin bisa menutup atau menambah jam tertentu.</p>
             </div>
         </div>
         <div class="flex items-center gap-2 text-xs font-medium text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100 self-start md:self-auto">
             <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-            11 Slot / Hari (09:00–20:00)
+            13 Slot / Hari (07:00–20:00)
         </div>
     </div>
 
@@ -46,7 +46,7 @@
             <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1.5">Jam Operasional (Buka - Tutup)</label>
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="time" name="jam_mulai" value="09:00" required class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-2.5 py-2.5 text-xs text-gray-900 focus:bg-white focus:border-[#1A3B32] transition">
+                    <input type="time" name="jam_mulai" value="07:00" required class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-2.5 py-2.5 text-xs text-gray-900 focus:bg-white focus:border-[#1A3B32] transition">
                     <input type="time" name="jam_selesai" value="20:00" required class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-2.5 py-2.5 text-xs text-gray-900 focus:bg-white focus:border-[#1A3B32] transition">
                 </div>
             </div>
@@ -104,7 +104,7 @@
                 $dateKey = $calendarDate->format('Y-m-d');
                 $daySlots = $calendarSlotsByDate->get($dateKey, collect());
             @endphp
-            <div class="min-h-28 rounded-xl border {{ $daySlots->isNotEmpty() ? 'border-emerald-200 bg-emerald-50/40' : 'border-gray-100 bg-gray-50/40' }} p-2">
+            <a href="{{ route('admin.slots.create', ['tanggal' => $dateKey]) }}" class="block min-h-28 rounded-xl border {{ $daySlots->isNotEmpty() ? 'border-emerald-200 bg-emerald-50/40' : 'border-gray-100 bg-gray-50/40' }} p-2 transition hover:border-[#E76F51] hover:bg-[#E76F51]/5 focus:outline-none focus:ring-2 focus:ring-[#E76F51]/40" title="Atur jadwal {{ $calendarDate->translatedFormat('d F Y') }}">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-sm font-bold {{ $calendarDate->isToday() ? 'text-[#E76F51]' : 'text-gray-700' }}">{{ $day }}</span>
                     @if($daySlots->isNotEmpty())
@@ -117,7 +117,8 @@
                         <div class="truncate text-[10px] text-gray-500">{{ $stylistSlots->count() }} slot · {{ $stylistSlots->where('status', 'tersedia')->count() }} tersedia</div>
                     @endforeach
                 </div>
-            </div>
+                <span class="mt-2 inline-flex text-[10px] font-medium text-[#E76F51]">Klik untuk atur jadwal</span>
+            </a>
         @endfor
     </div>
 </div>

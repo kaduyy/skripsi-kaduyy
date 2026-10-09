@@ -56,7 +56,7 @@
             <div>
                 <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Jadwal Reservasi</p>
                 <p class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($booking->tanggal_kunjungan)->translatedFormat('l, d F Y') }}</p>
-                <p class="text-sm text-gray-600">Pukul {{ \Carbon\Carbon::parse($booking->jam_kunjungan)->format('H:i') }} - {{ $bookingEnd->format('H:i') }}</p>
+                    <p class="text-sm text-gray-600">{{ $booking->jam_kunjungan ? 'Pukul ' . \Carbon\Carbon::parse($booking->jam_kunjungan)->format('H:i') . ' - ' . $bookingEnd->format('H:i') : 'Jam belum ditentukan' }}</p>
             </div>
             @if($booking->reservedSlots->isNotEmpty())
                 <div>
@@ -75,7 +75,7 @@
                         @foreach($transactionBookings as $transactionBooking)
                             <li class="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-700">
                                 {{ \Carbon\Carbon::parse($transactionBooking->tanggal_kunjungan)->translatedFormat('d F Y') }}
-                                &middot; {{ \Carbon\Carbon::parse($transactionBooking->jam_kunjungan)->format('H:i') }}
+                                &middot; {{ $transactionBooking->jam_kunjungan ? \Carbon\Carbon::parse($transactionBooking->jam_kunjungan)->format('H:i') : 'Jam menyusul' }}
                                 &middot; {{ $transactionBooking->slot?->kapster ?? '-' }}
                             </li>
                         @endforeach
@@ -106,7 +106,7 @@
                     <div class="mb-4">
                         <p class="text-sm text-gray-600 mb-1">
                             {{ $booking->payment->metode === 'tunai' ? 'Jumlah pembayaran di tempat' : 'Total Uang Muka' }}:
-                            <span class="font-medium text-gray-900">Rp {{ number_format($transactionDpTotal, 0, ',', '.') }}</span>
+                            <span class="font-medium text-gray-900">Rp {{ number_format($booking->payment->metode === 'tunai' ? $transactionTotal : $transactionDpTotal, 0, ',', '.') }}</span>
                         </p>
                         @if($booking->payment->metode === 'tunai')
                             <p class="text-sm text-gray-600 mb-3">Metode: <span class="font-medium text-gray-900">Bayar di tempat</span></p>

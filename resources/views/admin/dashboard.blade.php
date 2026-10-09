@@ -119,7 +119,7 @@
                             {{ $booking->slot ? \Carbon\Carbon::parse($booking->slot->tanggal)->format('d/m/Y') : \Carbon\Carbon::parse($booking->tanggal_kunjungan)->format('d/m/Y') }}
                             <br>
                             <span class="text-xs text-gray-500">
-                                {{ $booking->slot ? \Carbon\Carbon::parse($booking->slot->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($booking->slot->jam_selesai)->format('H:i') : \Carbon\Carbon::parse($booking->jam_kunjungan)->format('H:i') }}
+                                {{ $booking->slot ? \Carbon\Carbon::parse($booking->slot->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($booking->slot->jam_selesai)->format('H:i') : ($booking->jam_kunjungan ? \Carbon\Carbon::parse($booking->jam_kunjungan)->format('H:i') : 'Jam menyusul') }}
                             </span>
                         </td>
                         <td class="px-4 py-5 sm:px-6">

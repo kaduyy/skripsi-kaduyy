@@ -38,7 +38,7 @@
 
             <nav class="hidden items-center gap-8 text-sm font-medium text-white/80 md:flex">
                 <a href="{{ url('/') }}" class="transition hover:text-white">Beranda</a>
-                <a href="{{ url('/#layanan') }}" class="transition hover:text-white">Layanan</a>
+                <a href="{{ route('services.index') }}" class="transition hover:text-white">Layanan</a>
                 <a href="{{ url('/#galeri') }}" class="transition hover:text-white">Galeri</a>
                 <a href="{{ url('/#kontak') }}" class="transition hover:text-white">Kontak</a>
             </nav>

@@ -14,6 +14,11 @@ class SlotController extends Controller
     {
         $now = \Carbon\Carbon::now('Asia/Jakarta');
 
+        (new \App\Services\WorkingHoursService())->ensureDefaultSlots(
+            $now->copy()->startOfDay(),
+            $now->copy()->startOfDay()->addDays(30)
+        );
+
         // Tandai slot yang sudah selesai sebagai tutup, tanpa menghapus riwayatnya.
         \App\Models\Slot::where(function ($query) use ($now) {
                 $query->whereDate('tanggal', '<', $now->toDateString())
@@ -49,9 +54,11 @@ class SlotController extends Controller
         return view('admin.slots.index', compact('slots', 'calendarMonth', 'calendarStart', 'calendarSlots'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('admin.slots.create');
+        return view('admin.slots.create', [
+            'defaultDate' => $request->query('tanggal', now('Asia/Jakarta')->toDateString()),
+        ]);
     }
 
     public function store(Request $request)

@@ -52,8 +52,10 @@ public function create(\Illuminate\Http\Request $request)
 
     // Gunakan waktu Indonesia (WIB)
     $now = \Carbon\Carbon::now('Asia/Jakarta');
-    $today = $now->copy()->startOfDay();
-    $maximumBookingDate = $today->copy()->addDays(30);
+        $today = $now->copy()->startOfDay();
+        $maximumBookingDate = $today->copy()->addDays(30);
+
+        (new \App\Services\WorkingHoursService())->ensureDefaultSlots($today, $maximumBookingDate);
 
     // Hapus slot yang sudah lewat dan tidak memiliki booking
     \App\Models\Slot::where('tanggal', '<', $today->toDateString())
@@ -76,7 +78,7 @@ public function create(\Illuminate\Http\Request $request)
                         ->whereTime('jam_selesai', '>', $now->format('H:i:s'));
                 });
         })
-        ->where('status', 'tersedia')
+        ->where('status', '!=', 'tutup')
         ->whereDate('tanggal', '<=', $maximumBookingDate->toDateString())
         ->when($selectedDateFrom, fn ($query) => $query->whereDate('tanggal', '>=', $selectedDateFrom))
         ->when($selectedDateTo, fn ($query) => $query->whereDate('tanggal', '<=', $selectedDateTo))
@@ -86,12 +88,32 @@ public function create(\Illuminate\Http\Request $request)
         ->get();
 
     $selectedServices = $services->whereIn('id', $selectedServiceIds);
-    if ($selectedServices->isNotEmpty()) {
-        $slots = $slots->filter(function ($slot) use ($selectedServices, $now, $slots) {
-            return $this->getAvailableBookingStartTimeInSlot($slot, $selectedServices, $now, $slots) !== null;
-        })->values();
-    }
     $selectedDurationMinutes = (int) $selectedServices->sum('durasi_menit');
+    $bookingDate = $selectedDateFrom ?: $today->toDateString();
+    $availableStartTimes = collect();
+
+    if ($selectedStylistId && $selectedDurationMinutes > 0) {
+        $dailySlots = $slots
+            ->filter(fn ($slot) => \Carbon\Carbon::parse($slot->tanggal)->toDateString() === $bookingDate)
+            ->values();
+
+        foreach ($dailySlots as $dailySlot) {
+            $cursor = \Carbon\Carbon::parse($bookingDate . ' ' . $dailySlot->jam_mulai, 'Asia/Jakarta');
+            $slotEnd = \Carbon\Carbon::parse($bookingDate . ' ' . $dailySlot->jam_selesai, 'Asia/Jakarta');
+
+            while ($cursor->lt($slotEnd)) {
+                if ($this->isBookingStartAvailable($bookingDate, $selectedStylistId, $cursor, $selectedDurationMinutes, $dailySlots)) {
+                    $availableStartTimes->put($cursor->format('H:i'), [
+                        'time' => $cursor->format('H:i'),
+                        'slot_id' => $dailySlot->id,
+                        'label' => $cursor->format('H:i') . ' - ' . $cursor->copy()->addMinutes($selectedDurationMinutes)->format('H:i'),
+                    ]);
+                }
+                $cursor->addMinutes(30);
+            }
+        }
+        $availableStartTimes = $availableStartTimes->sortKeys()->values();
+    }
 
     $slotAvailability = [];
     foreach ($slots as $slot) {
@@ -104,7 +126,7 @@ public function create(\Illuminate\Http\Request $request)
             ->all();
     }
 
-    return view('booking.create', compact('services', 'stylists', 'slots', 'slotAvailability', 'selectedServiceIds', 'selectedStylistId', 'selectedDurationMinutes', 'selectedDateFrom', 'selectedDateTo', 'today', 'maximumBookingDate'));
+    return view('booking.create', compact('services', 'stylists', 'slots', 'slotAvailability', 'availableStartTimes', 'selectedServiceIds', 'selectedStylistId', 'selectedDurationMinutes', 'selectedDateFrom', 'selectedDateTo', 'today', 'maximumBookingDate'));
 }
 
     public function store(Request $request)
@@ -118,6 +140,8 @@ public function create(\Illuminate\Http\Request $request)
             'service_ids' => 'required|array|min:1',
             'service_ids.*' => 'required|integer|exists:services,id',
             'stylist_id' => 'required|integer|exists:stylists,id',
+            'booking_date' => 'nullable|date',
+            'booking_time' => 'nullable|date_format:H:i',
             'slot_id' => 'required|integer|exists:slots,id',
             'payment_method' => 'required|in:transfer_manual,tunai',
             'catatan' => 'nullable|string|max:500',
@@ -129,17 +153,19 @@ public function create(\Illuminate\Http\Request $request)
 
         try {
             $booking = \DB::transaction(function () use ($serviceIds, $validated, $now, $transactionGroupId) {
-                $requestedSlot = \App\Models\Slot::findOrFail($validated['slot_id']);
                 $maximumBookingDate = $now->copy()->startOfDay()->addDays(30);
-                if ($requestedSlot->tanggal < $now->toDateString() || $requestedSlot->tanggal > $maximumBookingDate->toDateString()) {
+                $requestedSlot = \App\Models\Slot::findOrFail($validated['slot_id']);
+                $bookingDate = \Carbon\Carbon::parse($validated['booking_date'] ?? $requestedSlot->tanggal, 'Asia/Jakarta')->toDateString();
+                if ($bookingDate < $now->toDateString() || $bookingDate > $maximumBookingDate->toDateString()) {
                     throw new \RuntimeException('Reservasi hanya dapat dibuat untuk hari ini sampai maksimal 30 hari ke depan.');
                 }
-                if ((int) $requestedSlot->stylist_id !== (int) $validated['stylist_id']) {
-                    throw new \RuntimeException('Stylist yang dipilih tidak sesuai dengan slot waktu.');
+                if ((int) $requestedSlot->stylist_id !== (int) $validated['stylist_id'] || $requestedSlot->tanggal !== $bookingDate) {
+                    throw new \RuntimeException('Stylist, tanggal, dan slot waktu yang dipilih tidak sesuai.');
                 }
 
                 $slots = \App\Models\Slot::whereDate('tanggal', $requestedSlot->tanggal)
                     ->where('stylist_id', $validated['stylist_id'])
+                    ->where('status', '!=', 'tutup')
                     ->orderBy('tanggal')
                     ->orderBy('jam_mulai')
                     ->lockForUpdate()
@@ -159,17 +185,15 @@ public function create(\Illuminate\Http\Request $request)
                 $totalHarga = $services->sum('harga');
                 $dp_amount = $totalHarga * 0.20;
 
-                $bookingStart = $this->getAvailableBookingStartTimeInSlot($slot, $services, $now, $slots);
-                if ($bookingStart === null) {
+                $bookingTime = $validated['booking_time']
+                    ?? \Carbon\Carbon::parse($requestedSlot->jam_mulai)->format('H:i');
+                $bookingStart = \Carbon\Carbon::parse($bookingDate . ' ' . $bookingTime, 'Asia/Jakarta');
+                if (! $this->isBookingStartAvailable($bookingDate, (int) $validated['stylist_id'], $bookingStart, $totalDurationMinutes, $slots)) {
                     throw new \RuntimeException('Slot berurutan untuk total durasi layanan tidak tersedia. Silakan pilih jam mulai lain.');
                 }
 
                 $reservedSlots = $validated['payment_method'] === 'transfer_manual'
-                    ? $this->getSlotsCoveringDuration(
-                        $slots->where('status', 'tersedia'),
-                        $bookingStart,
-                        $totalDurationMinutes
-                    )
+                    ? $this->getSlotsCoveringDuration($slots, $bookingStart, $totalDurationMinutes)
                     : collect();
 
                 if ($validated['payment_method'] === 'transfer_manual' && $reservedSlots === null) {
@@ -183,7 +207,7 @@ public function create(\Illuminate\Http\Request $request)
                     'slot_id' => $slot->id,
                     'nama_pelanggan' => auth()->user()->name,
                     'no_whatsapp' => auth()->user()->no_whatsapp ?? '080000000000',
-                    'tanggal_kunjungan' => $slot->tanggal,
+                    'tanggal_kunjungan' => $bookingDate,
                     'jam_kunjungan' => $bookingStart->format('H:i:s'),
                     'durasi_total_menit' => $totalDurationMinutes,
                     'total_harga' => $totalHarga,
@@ -217,7 +241,7 @@ public function create(\Illuminate\Http\Request $request)
 
                 \App\Models\Payment::create([
                     'booking_id' => $booking->id,
-                    'jumlah' => $dp_amount,
+                    'jumlah' => $validated['payment_method'] === 'tunai' ? $totalHarga : $dp_amount,
                     'metode' => $validated['payment_method'],
                     'status_pembayaran' => 'pending',
                 ]);
@@ -295,6 +319,43 @@ public function create(\Illuminate\Http\Request $request)
         return $legacyConflict ? null : $slotStart;
     }
 
+    private function isBookingStartAvailable(string $date, int $stylistId, \Carbon\Carbon $start, int $durationMinutes, $slots): bool
+    {
+        if ($start->lt(\Carbon\Carbon::now('Asia/Jakarta'))) {
+            return false;
+        }
+
+        $end = $start->copy()->addMinutes($durationMinutes);
+
+        // The selected time must be fully covered by the stylist's working slots.
+        if ($this->getSlotsCoveringDuration($slots, $start, $durationMinutes) === null) {
+            return false;
+        }
+
+        $bookings = \App\Models\Booking::with('services')
+            ->whereDate('tanggal_kunjungan', $date)
+            ->where('stylist_id', $stylistId)
+            ->whereNotIn('status', ['dibatalkan'])
+            ->whereNotNull('jam_kunjungan')
+            ->whereDoesntHave('payment', function ($query) {
+                $query->where('metode', 'tunai')
+                    ->where('status_pembayaran', 'pending');
+            })
+            ->get();
+
+        foreach ($bookings as $booking) {
+            $bookingStart = \Carbon\Carbon::parse($date . ' ' . $booking->jam_kunjungan, 'Asia/Jakarta');
+            $bookingDuration = (int) ($booking->durasi_total_menit ?: $booking->services->sum('pivot.durasi_menit'));
+            $bookingEnd = $bookingStart->copy()->addMinutes($bookingDuration);
+
+            if ($start->lt($bookingEnd) && $bookingStart->lt($end)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private function getSlotsCoveringDuration($slots, \Carbon\Carbon $start, int $durationMinutes): ?\Illuminate\Support\Collection
     {
         $end = $start->copy()->addMinutes($durationMinutes);
@@ -359,8 +420,10 @@ public function create(\Illuminate\Http\Request $request)
             ? $transactionDpTotal
             : (float) $booking->dp_amount;
         $bookingDurationMinutes = (int) ($booking->durasi_total_menit ?: $booking->services->sum('pivot.durasi_menit'));
-        $bookingEnd = \Carbon\Carbon::parse($booking->tanggal_kunjungan . ' ' . $booking->jam_kunjungan, 'Asia/Jakarta')
-            ->addMinutes($bookingDurationMinutes);
+        $bookingEnd = $booking->jam_kunjungan
+            ? \Carbon\Carbon::parse($booking->tanggal_kunjungan . ' ' . $booking->jam_kunjungan, 'Asia/Jakarta')
+                ->addMinutes($bookingDurationMinutes)
+            : null;
 
         return view('booking.show', compact('booking', 'transactionBookings', 'transactionTotal', 'transactionDpTotal', 'bookingEnd'));
     }

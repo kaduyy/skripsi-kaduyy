@@ -20,7 +20,7 @@
 
                 <a href="{{ route('booking.create') }}" class="rounded bg-[#E76F51] px-5 py-3 text-sm font-semibold tracking-[0.08em] text-white transition hover:bg-[#d85f43]">Booking sekarang</a>
 
-                <a href="#layanan" class="rounded border border-gray-300 px-5 py-3 text-sm font-semibold tracking-[0.08em] text-gray-800 transition hover:bg-white">Lihat layanan</a>
+                <a href="{{ route('services.index') }}" class="rounded border border-gray-300 px-5 py-3 text-sm font-semibold tracking-[0.08em] text-gray-800 transition hover:bg-white">Lihat layanan</a>
 
             </div>
 
@@ -82,7 +82,7 @@ Lubuk Baja, Batam</p>
 
         <div class="grid gap-4 md:grid-cols-3">
             @forelse($services->take(3) as $service)
-                <a href="{{ route('booking.create', ['service_id' => $service->id]) }}" class="block rounded-[1.25rem] bg-[#1A4D45] p-6 text-white shadow-[0_8px_24px_rgba(0,0,0,0.12)] ring-1 ring-white/5 transition hover:-translate-y-1 hover:ring-[#E76F51]/60">
+                <a href="{{ route('services.index') }}" class="block rounded-[1.25rem] bg-[#1A4D45] p-6 text-white shadow-[0_8px_24px_rgba(0,0,0,0.12)] ring-1 ring-white/5 transition hover:-translate-y-1 hover:ring-[#E76F51]/60">
                     <h3 class="text-[1.05rem] font-semibold leading-snug text-white md:text-[1.2rem]">{{ $service->nama_layanan }}</h3>
                     <p class="mt-3 min-h-16 text-sm leading-relaxed text-white/75">
                         {{ $service->deskripsi }}

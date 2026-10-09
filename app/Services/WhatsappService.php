@@ -195,10 +195,14 @@ class WhatsappService
         $booking->loadMissing(['user', 'services', 'slot', 'stylist']);
 
         $tanggal = \Carbon\Carbon::parse($booking->tanggal_kunjungan)->translatedFormat('d F Y');
-        $jamMulai = \Carbon\Carbon::parse($booking->jam_kunjungan)->format('H:i');
-        $jamSelesai = \Carbon\Carbon::parse($booking->jam_kunjungan)
-            ->addMinutes((int) ($booking->durasi_total_menit ?: $booking->services->sum('pivot.durasi_menit')))
-            ->format('H:i');
+        $jamMulai = $booking->jam_kunjungan
+            ? \Carbon\Carbon::parse($booking->jam_kunjungan)->format('H:i')
+            : null;
+        $jamSelesai = $booking->jam_kunjungan
+            ? \Carbon\Carbon::parse($booking->jam_kunjungan)
+                ->addMinutes((int) ($booking->durasi_total_menit ?: $booking->services->sum('pivot.durasi_menit')))
+                ->format('H:i')
+            : null;
         $bookingId = '#' . str_pad($booking->id, 5, '0', STR_PAD_LEFT);
         $bookingLink = url('/booking');
         $serviceNames = $booking->services->pluck('nama_layanan')->implode(', ');
@@ -208,7 +212,7 @@ class WhatsappService
              . "ID Reservasi: {$bookingId}\n"
              . "Layanan: {$serviceNames}\n"
              . "Stylist: " . ($booking->stylist?->nama ?? $booking->slot?->kapster ?? '-') . "\n"
-             . "Jadwal: {$tanggal}, pukul {$jamMulai} - {$jamSelesai} WIB\n\n"
+             . "Jadwal: {$tanggal}, " . ($jamMulai ? "pukul {$jamMulai} - {$jamSelesai} WIB" : "jam akan ditentukan oleh admin") . "\n\n"
              . "Silakan datang tepat waktu dan pastikan Anda menyiapkan kebutuhan perawatan Anda.\n\n"
              . "Klik link berikut untuk melihat halaman reservasi Anda: {$bookingLink}\n\n"
              . "Kami tunggu kehadiran Anda di Alan's Salon.\n"
@@ -286,4 +290,3 @@ class WhatsappService
         }
     }
 }
-

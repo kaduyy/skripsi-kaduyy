@@ -53,7 +53,9 @@
                 <div>
                     <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Jadwal Reservasi</h4>
                     <p class="text-gray-900 font-medium">{{ \Carbon\Carbon::parse($booking->tanggal_kunjungan)->translatedFormat('l, d F Y') }}</p>
-                    <p class="text-gray-500 text-sm mt-1">Pukul {{ \Carbon\Carbon::parse($booking->jam_kunjungan)->format('H:i') }} - {{ $bookingEnd->format('H:i') }}</p>
+                    <p class="text-gray-500 text-sm mt-1">
+                        {{ $booking->jam_kunjungan ? 'Pukul ' . \Carbon\Carbon::parse($booking->jam_kunjungan)->format('H:i') . ' - ' . $bookingEnd->format('H:i') : 'Jam akan ditentukan oleh admin' }}
+                    </p>
                 </div>
                 <div>
                     <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Stylist / Kapster</h4>
@@ -76,7 +78,7 @@
                             @foreach($transactionBookings as $transactionBooking)
                                 <li>
                                     {{ \Carbon\Carbon::parse($transactionBooking->tanggal_kunjungan)->translatedFormat('d F Y') }}
-                                    &middot; {{ \Carbon\Carbon::parse($transactionBooking->jam_kunjungan)->format('H:i') }}
+                                    &middot; {{ $transactionBooking->jam_kunjungan ? \Carbon\Carbon::parse($transactionBooking->jam_kunjungan)->format('H:i') : 'Jam menyusul' }}
                                     &middot; {{ $transactionBooking->slot?->kapster ?? '-' }}
                                 </li>
                             @endforeach
@@ -93,8 +95,8 @@
                         <span class="font-medium">Rp {{ number_format($transactionTotal, 0, ',', '.') }}</span>
                     </div>
                     <div class="flex justify-between pb-3 border-b border-gray-200">
-                        <span class="text-gray-500">Total DP (20%)</span>
-                        <span class="font-medium">Rp {{ number_format($transactionDpTotal, 0, ',', '.') }}</span>
+                        <span class="text-gray-500">{{ $booking->payment?->metode === 'tunai' ? 'Total Pembayaran' : 'Total DP (20%)' }}</span>
+                        <span class="font-medium">Rp {{ number_format($booking->payment?->metode === 'tunai' ? $transactionTotal : $transactionDpTotal, 0, ',', '.') }}</span>
                     </div>
                     
                     @if($booking->payment)
@@ -128,7 +130,7 @@
         @if($booking->status == 'menunggu_pembayaran' && $booking->payment?->metode === 'tunai' && $booking->payment->status_pembayaran === 'pending')
             <div class="p-6 md:p-8 border-t border-amber-200 bg-amber-50 text-amber-950">
                 <h3 class="text-lg font-medium playfair mb-2">Bayar di tempat</h3>
-                <p class="text-sm mb-4">Siapkan pembayaran sebesar <strong>Rp {{ number_format($transactionDpTotal, 0, ',', '.') }}</strong> saat datang ke salon. Slot belum dikunci dan bisa terisi oleh pelanggan lain sebelum admin mengonfirmasi pembayaran Anda.</p>
+                <p class="text-sm mb-4">Siapkan pembayaran sebesar <strong>Rp {{ number_format($transactionTotal, 0, ',', '.') }}</strong> saat datang ke salon. Slot belum dikunci dan bisa terisi oleh pelanggan lain sebelum admin mengonfirmasi pembayaran Anda.</p>
                 <form action="{{ route('booking.cancel', $booking->id) }}" method="POST" data-confirm="Batalkan permintaan booking cash ini?">
                     @csrf
                     <button type="submit" class="text-sm font-medium text-amber-900 underline underline-offset-2">Batalkan permintaan</button>

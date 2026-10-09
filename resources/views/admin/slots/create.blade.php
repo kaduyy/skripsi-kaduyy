@@ -13,14 +13,14 @@
         
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
-            <input type="date" name="tanggal" value="{{ old('tanggal') }}" required class="w-full border-gray-300 rounded-lg shadow-sm focus:border-[#E76F51] focus:ring-[#E76F51]">
+            <input type="date" name="tanggal" value="{{ old('tanggal', $defaultDate) }}" required class="w-full border-gray-300 rounded-lg shadow-sm focus:border-[#E76F51] focus:ring-[#E76F51]">
             @error('tanggal') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
         </div>
 
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Jam Buka / Mulai</label>
-                <input type="time" name="jam_mulai" value="{{ old('jam_mulai', '09:00') }}" required class="w-full border-gray-300 rounded-lg shadow-sm focus:border-[#E76F51] focus:ring-[#E76F51]">
+                <input type="time" name="jam_mulai" value="{{ old('jam_mulai', '07:00') }}" required class="w-full border-gray-300 rounded-lg shadow-sm focus:border-[#E76F51] focus:ring-[#E76F51]">
                 @error('jam_mulai') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
             </div>
             
@@ -36,7 +36,7 @@
                 <input type="checkbox" name="mode_per_jam" value="1" checked class="mt-1 rounded border-gray-300 text-[#E76F51] focus:ring-[#E76F51]">
                 <div>
                     <span class="font-medium text-amber-900 text-sm block">Buat Slot Otomatis Per Jam (Rekomendasi)</span>
-                    <span class="text-xs text-amber-700 block mt-0.5">Sistem akan otomatis memecah jam buka (09:00) sampai jam tutup (20:00) menjadi slot 1 jam-an. Admin tidak perlu input 1 per 1 secara manual.</span>
+                    <span class="text-xs text-amber-700 block mt-0.5">Sistem akan otomatis memecah jam buka (07:00) sampai jam tutup (20:00) menjadi slot 1 jam-an. Admin tidak perlu input 1 per 1 secara manual.</span>
                 </div>
             </label>
         </div>
