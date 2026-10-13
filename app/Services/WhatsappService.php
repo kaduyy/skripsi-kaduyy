@@ -260,6 +260,14 @@ class WhatsappService
         return "Halo {$customerName}, reservasi #{$bookingCode} di Alan's Salon telah dibatalkan. Pembatalan tidak dapat dilakukan refund. Terima kasih.";
     }
 
+    public static function buildNoShowMessage(Booking $booking): string
+    {
+        $customerName = $booking->user?->name ?? $booking->nama_pelanggan ?? 'Pelanggan';
+        $bookingCode = str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT);
+
+        return "Halo {$customerName}, reservasi #{$bookingCode} di Alan's Salon ditutup otomatis sebagai Tidak Hadir karena melewati jadwal dan toleransi 15 menit. Pembayaran/DP tidak dapat direfund. Terima kasih.";
+    }
+
     /**
      * Request an 8-digit WhatsApp pairing code for linking by phone number without scanning QR
      */

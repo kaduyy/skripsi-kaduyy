@@ -31,6 +31,7 @@ class BookingController extends Controller
             'dibayar',
             'dibatalkan',
             'selesai',
+            'tidak_hadir',
         ];
 
         $query = Booking::with([

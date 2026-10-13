@@ -8,16 +8,6 @@ use Illuminate\Http\Request;
 
 class StylistController extends Controller
 {
-    public function index()
-    {
-        $stylists = Stylist::withCount(['slots', 'bookings'])
-            ->orderBy('status')
-            ->orderBy('nama')
-            ->get();
-
-        return view('admin.stylists.index', compact('stylists'));
-    }
-
     public function store(Request $request)
     {
         $validated = $request->validate([

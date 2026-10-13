@@ -24,6 +24,8 @@
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">Selesai</span>
             @elseif($booking->status == 'dibatalkan')
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 border border-red-200">Dibatalkan</span>
+            @elseif($booking->status == 'tidak_hadir')
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200">Tidak Hadir</span>
             @endif
         </div>
         
