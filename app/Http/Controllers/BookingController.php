@@ -3,10 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Services\WhatsappService;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller
 {
+    protected WhatsappService $whatsapp;
+
+    public function __construct(WhatsappService $whatsapp)
+    {
+        $this->whatsapp = $whatsapp;
+    }
+
 public function paymentProof(\App\Models\Booking $booking)
 {
     $user = auth()->user();
@@ -490,7 +498,7 @@ public function create(\Illuminate\Http\Request $request)
     }
     public function cancel(\App\Models\Booking $booking)
     {
-        if ($booking->user_id !== auth()->id() || $booking->status !== 'menunggu_pembayaran') {
+        if ($booking->user_id !== auth()->id() || ! in_array($booking->status, ['menunggu_pembayaran', 'dibayar'], true)) {
             abort(403);
         }
 
@@ -513,6 +521,15 @@ public function create(\Illuminate\Http\Request $request)
                 }
             }
         });
+
+        $booking->loadMissing(['user', 'slot', 'services']);
+        if ($booking->user?->no_whatsapp) {
+            $this->whatsapp->sendNotification(
+                $booking,
+                'cancelled',
+                \App\Services\WhatsappService::buildCancellationMessage($booking)
+            );
+        }
 
         return redirect()->route('dashboard')->with('success', 'Seluruh reservasi dalam transaksi berhasil dibatalkan.');
     }

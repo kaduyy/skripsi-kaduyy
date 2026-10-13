@@ -139,11 +139,11 @@
                 <h4 class="text-sm font-medium text-gray-700 mb-4">Tindakan Admin</h4>
                 <div class="space-y-3">
                     @if($booking->status == 'menunggu_pembayaran' && $booking->payment && ($booking->payment->metode === 'tunai' || $booking->bukti_transfer))
-                        <form action="{{ route('admin.bookings.approve', $booking->id) }}" method="POST" data-confirm="Apakah Anda yakin ingin memverifikasi dan menyetujui DP untuk reservasi ini?">
+                        <form action="{{ route('admin.bookings.approve', $booking->id) }}" method="POST" data-confirm="Apakah Anda yakin ingin {{ $booking->payment->metode === 'tunai' ? 'mengonfirmasi pembayaran tunai dan menyetujui' : 'memverifikasi DP dan menyetujui' }} reservasi ini?">
                             @csrf
                             <button type="submit" class="w-full bg-green-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center justify-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                                Verifikasi & Setujui DP
+                                {{ $booking->payment->metode === 'tunai' ? 'Konfirmasi Tunai & Setujui' : 'Verifikasi & Setujui DP' }}
                             </button>
                         </form>
                     @endif

@@ -42,11 +42,6 @@
                 <span class="font-medium text-sm">Layanan</span>
             </a>
 
-            <a href="{{ route('admin.stylists.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('admin.stylists.*') ? 'bg-[#E76F51] text-white' : 'text-[#A0B0AA] hover:bg-[#1A3B32] hover:text-white' }} transition">
-                <span class="flex h-5 w-5 items-center justify-center rounded-full border border-current text-[10px]">S</span>
-                <span class="font-medium text-sm">Kelola Stylist</span>
-            </a>
-
             <a href="{{ route('admin.slots.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('admin.slots.*') ? 'bg-[#E76F51] text-white' : 'text-[#A0B0AA] hover:bg-[#1A3B32] hover:text-white' }} transition">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
                 <span class="font-medium text-sm">Kelola Jadwal Booking</span>

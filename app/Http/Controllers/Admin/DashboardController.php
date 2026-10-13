@@ -28,8 +28,9 @@ class DashboardController extends Controller
             'dibatalkan',
         ];
 
-        $incomeToday = $this->verifiedPaymentsBetween($today, $today)->sum('jumlah');
-        $incomeMonth = $this->verifiedPaymentsBetween($startDate, $endDate)->sum('jumlah');
+        $incomeToday = $this->completedBookingsBetween($today, $today)->sum('total_harga');
+        $incomeMonth = $this->completedBookingsBetween($startDate, $endDate)->sum('total_harga');
+        $receivedMonth = $this->verifiedPaymentsBetween($startDate, $endDate)->sum('jumlah');
 
         $bookingsToday = Booking::whereHas('slot', function ($q) use ($today) {
             $q->where('tanggal', $today);
@@ -40,7 +41,7 @@ class DashboardController extends Controller
         })->count();
 
         $waitingCount = Booking::where('status', 'menunggu_pembayaran')->count();
-        $paidCount = $this->verifiedPaymentsBetween($startDate, $endDate)->count();
+        $paidCount = $this->completedBookingsBetween($startDate, $endDate)->count();
         $cancelledCount = Booking::where('status', 'dibatalkan')->count();
 
         $recentBookingsQuery = Booking::with([
@@ -63,6 +64,7 @@ class DashboardController extends Controller
             compact(
                 'incomeToday',
                 'incomeMonth',
+                'receivedMonth',
                 'bookingsToday',
                 'bookingsMonth',
                 'recentBookings',
@@ -85,14 +87,17 @@ class DashboardController extends Controller
             [$startDate, $endDate] = [$endDate, $startDate];
         }
 
-        $incomeToday = $this->verifiedPaymentsBetween(now()->toDateString(), now()->toDateString())->sum('jumlah');
-        $incomeMonth = $this->verifiedPaymentsBetween($startDate, $endDate)->sum('jumlah');
-        $bookingsMonth = Booking::whereBetween('tanggal_kunjungan', [$startDate, $endDate])->count();
+        $incomeToday = $this->completedBookingsBetween(now()->toDateString(), now()->toDateString())->sum('total_harga');
+        $incomeMonth = $this->completedBookingsBetween($startDate, $endDate)->sum('total_harga');
+        $bookingsMonth = $this->completedBookingsBetween($startDate, $endDate)->count();
         $recentPayments = $this->verifiedPaymentsBetween($startDate, $endDate)
             ->with(['booking.user', 'booking.services'])
             ->orderByRaw('COALESCE(verified_at, updated_at) DESC')
             ->take(20)
             ->get();
+        $receivedForCompletedMonth = $this->completedPaymentsBetween($startDate, $endDate)->sum('jumlah');
+        $receivedMonth = $this->verifiedPaymentsBetween($startDate, $endDate)->sum('jumlah');
+        $outstandingMonth = max(0, (float) $incomeMonth - (float) $receivedForCompletedMonth);
         $paidCount = $bookingsMonth;
         $status = null;
 
@@ -101,6 +106,8 @@ class DashboardController extends Controller
             compact(
                 'incomeToday',
                 'incomeMonth',
+                'receivedMonth',
+                'outstandingMonth',
                 'bookingsMonth',
                 'recentPayments',
                 'paidCount',
@@ -128,8 +135,10 @@ class DashboardController extends Controller
             ->with(['booking.user', 'booking.services'])
             ->orderByRaw('COALESCE(verified_at, updated_at)')
             ->get();
-        $totalPendapatan = $payments->sum('jumlah');
-        $totalReservasi = $payments->count();
+        $completedBookings = $this->completedBookingsBetween($startDate, $endDate)->get();
+        $totalUangDiterima = $payments->sum('jumlah');
+        $totalPendapatan = $completedBookings->sum('total_harga');
+        $totalReservasi = $completedBookings->count();
         $totalDibayar = $payments
             ->filter(fn (Payment $payment) => $payment->booking?->status === 'dibayar')
             ->sum('jumlah');
@@ -146,6 +155,7 @@ class DashboardController extends Controller
             compact(
                 'payments',
                 'totalPendapatan',
+                'totalUangDiterima',
                 'totalReservasi',
                 'totalDibayar',
                 'totalSelesai',
@@ -185,5 +195,21 @@ class DashboardController extends Controller
                             ->whereBetween('updated_at', [$start, $end]);
                     });
             });
+    }
+
+    private function completedPaymentsBetween(string $startDate, string $endDate)
+    {
+        return $this->verifiedPaymentsBetween($startDate, $endDate)
+            ->whereHas('booking', function ($query) use ($startDate, $endDate) {
+                $query->where('status', 'selesai')
+                    ->whereBetween('tanggal_kunjungan', [$startDate, $endDate]);
+            });
+    }
+
+    private function completedBookingsBetween(string $startDate, string $endDate)
+    {
+        return Booking::query()
+            ->where('status', 'selesai')
+            ->whereBetween('tanggal_kunjungan', [$startDate, $endDate]);
     }
 }

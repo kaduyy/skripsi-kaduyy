@@ -16,7 +16,7 @@
             <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#E76F51]">Ringkasan Keuangan</p>
                 <h3 class="mt-2 text-2xl font-semibold text-gray-900">Pendapatan Salon</h3>
-                <p class="mt-1 text-sm text-gray-500">Periode: {{ $rangeLabel }}</p>
+                <p class="mt-1 text-sm text-gray-500">Periode: {{ $rangeLabel }} · Pendapatan dihitung dari total layanan selesai.</p>
             </div>
 
             <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
@@ -57,22 +57,22 @@
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p class="text-sm text-gray-500">Pendapatan Hari Ini</p>
-            <h4 class="mt-3 text-2xl font-semibold text-gray-900">Rp {{ number_format($incomeToday, 0, ',', '.') }}</h4>
-        </div>
-
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p class="text-sm text-gray-500">Pendapatan Periode</p>
+            <p class="text-sm text-gray-500">Pendapatan Layanan Selesai</p>
             <h4 class="mt-3 text-2xl font-semibold text-gray-900">Rp {{ number_format($incomeMonth, 0, ',', '.') }}</h4>
         </div>
 
         <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p class="text-sm text-gray-500">Jumlah Booking</p>
-            <h4 class="mt-3 text-2xl font-semibold text-gray-900">{{ $bookingsMonth }}</h4>
+            <p class="text-sm text-gray-500">Uang Diterima</p>
+            <h4 class="mt-3 text-2xl font-semibold text-gray-900">Rp {{ number_format($receivedMonth, 0, ',', '.') }}</h4>
+        </div>
+
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p class="text-sm text-gray-500">Sisa Pembayaran</p>
+            <h4 class="mt-3 text-2xl font-semibold text-gray-900">Rp {{ number_format($outstandingMonth, 0, ',', '.') }}</h4>
         </div>
 
         <div class="rounded-2xl border border-[#E76F51]/20 bg-[#FFF7F4] p-5 shadow-sm">
-            <p class="text-sm text-gray-600">Status Terverifikasi</p>
+            <p class="text-sm text-gray-600">Layanan Selesai</p>
             <h4 class="mt-3 text-2xl font-semibold text-[#1A3B32]">{{ $paidCount }}</h4>
         </div>
     </div>
@@ -90,8 +90,9 @@
                         <th class="whitespace-nowrap border-b border-gray-100 px-4 py-4 sm:px-6">Pelanggan</th>
                         <th class="whitespace-nowrap border-b border-gray-100 px-4 py-4 sm:px-6">Layanan</th>
                         <th class="whitespace-nowrap border-b border-gray-100 px-4 py-4 sm:px-6">Tanggal</th>
+                        <th class="whitespace-nowrap border-b border-gray-100 px-4 py-4 sm:px-6">Metode</th>
                         <th class="whitespace-nowrap border-b border-gray-100 px-4 py-4 sm:px-6">Status</th>
-                        <th class="whitespace-nowrap border-b border-gray-100 px-4 py-4 sm:px-6 text-right">Nominal</th>
+                        <th class="whitespace-nowrap border-b border-gray-100 px-4 py-4 sm:px-6 text-right">Uang Diterima</th>
                     </tr>
                 </thead>
 
@@ -113,6 +114,11 @@
                                 {{ $paymentDateText }}
                             </td>
                             <td class="px-4 py-4 sm:px-6">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium {{ $payment->metode === 'tunai' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800' }}">
+                                    {{ $payment->metode === 'tunai' ? 'Tunai / Lunas' : 'Transfer / DP' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 sm:px-6">
                                 <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800">Terverifikasi</span>
                             </td>
                             <td class="px-4 py-4 text-right sm:px-6">
@@ -121,7 +127,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">Belum ada data transaksi.</td>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">Belum ada data transaksi.</td>
                         </tr>
                     @endforelse
                 </tbody>

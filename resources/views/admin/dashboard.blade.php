@@ -80,12 +80,12 @@
     </div>
 
     <div class="rounded-2xl border border-gray-200 bg-white px-5 py-5 shadow-sm md:px-6 md:py-[26px]">
-        <p class="text-sm text-gray-500">Jumlah Booking</p>
-        <h4 class="mt-4 text-3xl font-semibold text-gray-900">{{ $bookingsMonth }}</h4>
+        <p class="text-sm text-gray-500">Uang Diterima</p>
+        <h4 class="mt-4 text-3xl font-semibold text-gray-900">Rp {{ number_format($receivedMonth, 0, ',', '.') }}</h4>
     </div>
 
     <div class="rounded-2xl border border-[#E76F51]/20 bg-[#FFF7F4] px-5 py-5 shadow-sm md:px-6 md:py-[26px]">
-        <p class="text-sm text-gray-600">Status Terverifikasi</p>
+        <p class="text-sm text-gray-600">Layanan Selesai</p>
         <h4 class="mt-4 text-3xl font-semibold text-[#1A3B32]">{{ $paidCount }}</h4>
     </div>
 </div>

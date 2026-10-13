@@ -29,7 +29,7 @@ class StylistController extends Controller
             'status' => 'aktif',
         ]);
 
-        return redirect()->route('admin.stylists.index')
+        return redirect()->route('admin.slots.index')
             ->with('success', 'Stylist berhasil ditambahkan. Jadwal 07:00-20:00 akan dibuat otomatis saat diperlukan.');
     }
 
@@ -39,9 +39,22 @@ class StylistController extends Controller
             'status' => $stylist->status === 'aktif' ? 'nonaktif' : 'aktif',
         ]);
 
-        return redirect()->route('admin.stylists.index')
+        return redirect()->route('admin.slots.index')
             ->with('success', $stylist->status === 'aktif'
                 ? 'Stylist diaktifkan kembali.'
                 : 'Stylist dinonaktifkan. Riwayat booking tetap aman.');
+    }
+
+    public function destroy(Stylist $stylist)
+    {
+        if ($stylist->bookings()->exists()) {
+            return redirect()->route('admin.slots.index')
+                ->with('error', 'Stylist tidak dapat dihapus karena sudah memiliki riwayat booking. Nonaktifkan saja.');
+        }
+
+        $stylist->delete();
+
+        return redirect()->route('admin.slots.index')
+            ->with('success', 'Stylist berhasil dihapus.');
     }
 }

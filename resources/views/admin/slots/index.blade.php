@@ -10,7 +10,12 @@
 </div>
 @endif
 
-<!-- Luxury Bulk Generate Card -->
+@if(session('error'))
+<div class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">{{ session('error') }}</div>
+@endif
+
+@if(false)
+<!-- Legacy bulk generate card -->
 <div class="bg-white rounded-2xl border border-gray-100 shadow-xs p-6 md:p-8 mb-8">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 mb-6 border-b border-gray-100">
         <div class="flex items-center gap-3">
@@ -70,6 +75,54 @@
     </form>
 </div>
 
+@endif
+
+<div class="mb-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+    <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs">
+        <h3 class="text-lg font-semibold text-gray-900">Tambah Stylist</h3>
+        <p class="mt-1 text-sm text-gray-500">Stylist baru otomatis mendapat jam kerja default 07:00-20:00.</p>
+        <form action="{{ route('admin.stylists.store') }}" method="POST" class="mt-5 space-y-4">
+            @csrf
+            <input name="nama" value="{{ old('nama') }}" required maxlength="100" class="w-full rounded-xl border-gray-300 text-sm shadow-sm focus:border-[#E76F51] focus:ring-[#E76F51]" placeholder="Nama stylist">
+            <button class="w-full rounded-xl bg-[#1A3B32] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#244d41]">Tambah Stylist</button>
+        </form>
+    </div>
+    <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xs">
+        <div class="border-b border-gray-100 bg-gray-50/50 p-6">
+            <h3 class="text-lg font-semibold text-gray-900">Daftar Stylist</h3>
+            <p class="mt-1 text-sm text-gray-500">Aktifkan atau nonaktifkan stylist tanpa menghapus riwayat booking.</p>
+        </div>
+        <div class="divide-y divide-gray-100">
+            @forelse($stylists as $stylist)
+                <div class="flex items-center justify-between gap-4 px-6 py-4">
+                    <div>
+                        <p class="font-medium text-gray-900">{{ $stylist->nama }}</p>
+                        <p class="text-xs text-gray-500">{{ $stylist->slots_count }} slot · {{ $stylist->bookings_count }} booking</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <form action="{{ route('admin.stylists.toggle', $stylist) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <button class="rounded-lg border px-3 py-2 text-xs font-medium {{ $stylist->status === 'aktif' ? 'border-amber-200 text-amber-700 hover:bg-amber-50' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50' }}">
+                                {{ $stylist->status === 'aktif' ? 'Nonaktifkan' : 'Aktifkan' }}
+                            </button>
+                        </form>
+                        @if($stylist->bookings_count === 0)
+                            <form action="{{ route('admin.stylists.destroy', $stylist) }}" method="POST" data-confirm="Yakin ingin menghapus stylist {{ $stylist->nama }}? Tindakan ini tidak dapat dibatalkan.">
+                                @csrf
+                                @method('DELETE')
+                                <button class="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50">Hapus</button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <p class="px-6 py-8 text-center text-sm text-gray-500">Belum ada stylist.</p>
+            @endforelse
+        </div>
+    </div>
+</div>
+
 @php
     $calendarSlotsByDate = $calendarSlots->groupBy(fn ($slot) => \Carbon\Carbon::parse($slot->tanggal)->format('Y-m-d'));
     $calendarFirstDayOffset = $calendarStart->dayOfWeekIso - 1;
@@ -81,10 +134,12 @@
             <h3 class="text-lg font-semibold text-gray-900">Kalender Jadwal</h3>
             <p class="text-sm text-gray-500 mt-1">Lihat slot per tanggal dan stylist untuk mengatur booking bulan depan.</p>
         </div>
-        <form method="GET" action="{{ route('admin.slots.index') }}" class="flex items-center gap-2">
-            <label for="calendar-month" class="text-sm font-medium text-gray-700">Bulan</label>
-            <input id="calendar-month" type="month" name="month" value="{{ $calendarMonth }}" onchange="this.form.submit()" class="rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-[#1A3B32] focus:ring-[#1A3B32]">
-        </form>
+        <div class="flex items-center gap-2">
+            <form method="GET" action="{{ route('admin.slots.index') }}" class="flex items-center gap-2">
+                <label for="calendar-month" class="text-sm font-medium text-gray-700">Bulan</label>
+                <input id="calendar-month" type="month" name="month" value="{{ $calendarMonth }}" onchange="this.form.submit()" class="rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-[#1A3B32] focus:ring-[#1A3B32]">
+            </form>
+        </div>
     </div>
 
     <div class="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">

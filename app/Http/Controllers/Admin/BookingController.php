@@ -212,7 +212,9 @@ class BookingController extends Controller
         $approved = DB::transaction(function () use ($booking) {
             $transactionBookings = $booking->transactionBookings()->lockForUpdate()->get();
 
-            if ($transactionBookings->isEmpty() || $transactionBookings->contains(fn ($item) => ! $item->bukti_transfer)) {
+            if ($transactionBookings->isEmpty() || $transactionBookings->contains(function ($item) {
+                return $item->payment?->metode !== 'tunai' && ! $item->bukti_transfer;
+            })) {
                 return false;
             }
 
@@ -252,7 +254,9 @@ class BookingController extends Controller
 
             return back()->with(
                 'success',
-                'Pembayaran DP telah diverifikasi dan reservasi disetujui.'
+                $booking->payment?->metode === 'tunai'
+                    ? 'Pembayaran tunai dikonfirmasi dan reservasi disetujui.'
+                    : 'Pembayaran DP telah diverifikasi dan reservasi disetujui.'
             );
         }
 

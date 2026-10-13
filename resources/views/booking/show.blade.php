@@ -131,7 +131,7 @@
             <div class="p-6 md:p-8 border-t border-amber-200 bg-amber-50 text-amber-950">
                 <h3 class="text-lg font-medium playfair mb-2">Bayar di tempat</h3>
                 <p class="text-sm mb-4">Siapkan pembayaran sebesar <strong>Rp {{ number_format($transactionTotal, 0, ',', '.') }}</strong> saat datang ke salon. Slot belum dikunci dan bisa terisi oleh pelanggan lain sebelum admin mengonfirmasi pembayaran Anda.</p>
-                <form action="{{ route('booking.cancel', $booking->id) }}" method="POST" data-confirm="Batalkan permintaan booking cash ini?">
+                <form action="{{ route('booking.cancel', $booking->id) }}" method="POST" data-confirm="Yakin ingin membatalkan reservasi ini? Pembatalan tidak dapat refund. Anda akan menerima notifikasi WhatsApp setelah pembatalan diproses.">
                     @csrf
                     <button type="submit" class="text-sm font-medium text-amber-900 underline underline-offset-2">Batalkan permintaan</button>
                 </form>
@@ -160,12 +160,21 @@
                         </button>
                     </div>
                 </form>
-                <form action="{{ route('booking.cancel', $booking->id) }}" method="POST" class="mt-4" data-confirm="Apakah Anda yakin ingin membatalkan semua reservasi dalam transaksi ini? Kuota slot waktu akan dikembalikan secara otomatis.">
+                <form action="{{ route('booking.cancel', $booking->id) }}" method="POST" class="mt-4" data-confirm="Yakin ingin membatalkan semua reservasi dalam transaksi ini? Pembatalan tidak dapat refund. Anda akan menerima notifikasi WhatsApp setelah pembatalan diproses.">
                     @csrf
                     <button type="submit" class="text-white/60 hover:text-white text-sm transition flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                         Batalkan Reservasi
                     </button>
+                </form>
+            </div>
+        @elseif($booking->status == 'dibayar')
+            <div class="p-6 md:p-8 border-t border-red-200 bg-red-50 text-red-950">
+                <h3 class="text-lg font-medium playfair mb-2">Batalkan Reservasi</h3>
+                <p class="text-sm mb-4">Pembatalan tidak dapat refund. Setelah dibatalkan, Anda akan menerima notifikasi melalui WhatsApp.</p>
+                <form action="{{ route('booking.cancel', $booking->id) }}" method="POST" data-confirm="Yakin ingin membatalkan reservasi ini? Pembatalan tidak dapat refund. Anda akan menerima notifikasi WhatsApp setelah pembatalan diproses.">
+                    @csrf
+                    <button type="submit" class="text-sm font-medium text-red-700 underline underline-offset-2">Batalkan Reservasi</button>
                 </form>
             </div>
         @elseif($booking->status == 'selesai')

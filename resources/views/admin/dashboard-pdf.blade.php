@@ -198,7 +198,7 @@
             <td>
 
                 <div class="summary-title">
-                    Total Pendapatan
+                    Pendapatan Layanan Selesai
                 </div>
 
                 <div class="summary-value">
@@ -224,11 +224,11 @@
             <td>
 
                 <div class="summary-title">
-                    Reservasi Dibayar
+                    Uang Diterima
                 </div>
 
                 <div class="summary-value">
-                    Rp {{ number_format($totalDibayar, 0, ',', '.') }}
+                    Rp {{ number_format($totalUangDiterima, 0, ',', '.') }}
                 </div>
 
             </td>
@@ -241,7 +241,7 @@
                 </div>
 
                 <div class="summary-value">
-                    Rp {{ number_format($totalSelesai, 0, ',', '.') }}
+                    {{ $totalReservasi }}
                 </div>
 
             </td>
@@ -249,6 +249,10 @@
         </tr>
 
     </table>
+
+    <p style="margin-top: 8px; color: #666; font-size: 10px;">
+        Catatan: DP adalah uang muka, bukan pendapatan penuh. Pendapatan dihitung setelah layanan selesai.
+    </p>
 
 
     {{-- ================================================= --}}
@@ -278,16 +282,20 @@
                     Layanan
                 </th>
 
-                <th style="width: 18%;">
+                <th style="width: 14%;">
                     Tanggal
                 </th>
 
                 <th style="width: 14%;">
+                    Metode
+                </th>
+
+                <th style="width: 13%;">
                     Status
                 </th>
 
-                <th style="width: 25%;">
-                    Jumlah Pembayaran
+                <th style="width: 20%;">
+                    Uang Diterima
                 </th>
 
             </tr>
@@ -336,8 +344,16 @@
                     <td>
 
                         {{ ($payment->verified_at ?? $payment->updated_at)
-                            ? ($payment->verified_at ?? $payment->updated_at)->format('d/m/Y')
+                            ? \Carbon\Carbon::parse($payment->verified_at ?? $payment->updated_at)->format('d/m/Y')
                             : '-' }}
+
+                    </td>
+
+                    {{-- Metode --}}
+
+                    <td>
+
+                        {{ $payment->metode === 'tunai' ? 'Tunai / Lunas' : 'Transfer / DP' }}
 
                     </td>
 
@@ -346,7 +362,11 @@
 
                     <td class="status">
 
-                        @if($payment->booking?->status === 'dibayar')
+                        @if($payment->metode === 'tunai')
+
+                            Tunai Terverifikasi
+
+                        @elseif($payment->booking?->status === 'dibayar')
 
                             DP Terverifikasi
 
@@ -390,7 +410,7 @@
                 <tr>
 
                     <td
-                        colspan="6"
+                        colspan="7"
                         class="text-center"
                     >
 
@@ -411,11 +431,11 @@
                 <tr class="total-row">
 
                     <td
-                        colspan="5"
+                        colspan="6"
                         class="text-right"
                     >
 
-                        TOTAL PENDAPATAN
+                        TOTAL UANG DITERIMA
 
                     </td>
 
@@ -423,7 +443,7 @@
 
                         Rp
                         {{ number_format(
-                            $totalPendapatan,
+                            $totalUangDiterima,
                             0,
                             ',',
                             '.'
@@ -438,6 +458,10 @@
         </tbody>
 
     </table>
+
+    <div class="period">
+        <strong>Catatan:</strong> Pastikan semua layanan telah diselesaikan di sistem. Pendapatan penuh dihitung setelah layanan selesai.
+    </div>
 
 
     {{-- ================================================= --}}

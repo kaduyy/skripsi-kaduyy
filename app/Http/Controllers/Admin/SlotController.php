@@ -51,7 +51,11 @@ class SlotController extends Controller
             ->orderBy('jam_mulai')
             ->get();
 
-        return view('admin.slots.index', compact('slots', 'calendarMonth', 'calendarStart', 'calendarSlots'));
+        $stylists = \App\Models\Stylist::withCount(['slots', 'bookings'])
+            ->orderBy('nama')
+            ->get();
+
+        return view('admin.slots.index', compact('slots', 'calendarMonth', 'calendarStart', 'calendarSlots', 'stylists'));
     }
 
     public function create(Request $request)

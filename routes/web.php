@@ -181,6 +181,7 @@ Route::middleware(['auth', 'admin'])
         Route::get('stylists', [App\Http\Controllers\Admin\StylistController::class, 'index'])->name('stylists.index');
         Route::post('stylists', [App\Http\Controllers\Admin\StylistController::class, 'store'])->name('stylists.store');
         Route::patch('stylists/{stylist}/toggle', [App\Http\Controllers\Admin\StylistController::class, 'toggle'])->name('stylists.toggle');
+        Route::delete('stylists/{stylist}', [App\Http\Controllers\Admin\StylistController::class, 'destroy'])->name('stylists.destroy');
 
 
         /*
