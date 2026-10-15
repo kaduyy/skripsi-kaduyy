@@ -137,6 +137,56 @@ public function create(\Illuminate\Http\Request $request)
     return view('booking.create', compact('services', 'stylists', 'slots', 'slotAvailability', 'availableStartTimes', 'selectedServiceIds', 'selectedStylistId', 'selectedDurationMinutes', 'selectedDateFrom', 'selectedDateTo', 'today', 'maximumBookingDate'));
 }
 
+    public function availability(Request $request)
+    {
+        $serviceIds = array_values(array_unique(array_map('intval', (array) $request->query('service_ids', []))));
+        $stylistId = $request->integer('stylist_id');
+        $date = $request->query('booking_date');
+        $today = \Carbon\Carbon::now('Asia/Jakarta')->startOfDay();
+        $maximumDate = $today->copy()->addDays(30);
+
+        if (! $stylistId || ! $date || ! count($serviceIds)) {
+            return response()->json(['times' => [], 'reason' => 'Pilih layanan dan stylist untuk melihat jam yang tersedia.']);
+        }
+
+        try {
+            $bookingDate = \Carbon\Carbon::parse($date, 'Asia/Jakarta')->toDateString();
+        } catch (\Throwable $e) {
+            return response()->json(['times' => [], 'reason' => 'Tanggal reservasi tidak valid.'], 422);
+        }
+
+        if ($bookingDate < $today->toDateString() || $bookingDate > $maximumDate->toDateString()) {
+            return response()->json(['times' => [], 'reason' => 'Tanggal reservasi berada di luar rentang yang tersedia.']);
+        }
+
+        (new \App\Services\WorkingHoursService())->ensureDefaultSlots($today, $maximumDate);
+        $duration = (int) \App\Models\Service::whereIn('id', $serviceIds)
+            ->where('status', 'aktif')->sum('durasi_menit');
+        $slots = \App\Models\Slot::whereDate('tanggal', $bookingDate)
+            ->where('stylist_id', $stylistId)
+            ->where('status', '!=', 'tutup')
+            ->orderBy('jam_mulai')->get();
+        $times = collect();
+
+        if ($duration > 0) {
+            foreach ($slots as $slot) {
+                $cursor = \Carbon\Carbon::parse($bookingDate . ' ' . $slot->jam_mulai, 'Asia/Jakarta');
+                $end = \Carbon\Carbon::parse($bookingDate . ' ' . $slot->jam_selesai, 'Asia/Jakarta');
+                while ($cursor->lt($end)) {
+                    if ($this->isBookingStartAvailable($bookingDate, $stylistId, $cursor, $duration, $slots)) {
+                        $times->put($cursor->format('H:i'), [
+                            'time' => $cursor->format('H:i'), 'slot_id' => $slot->id,
+                            'label' => $cursor->format('H:i') . ' - ' . $cursor->copy()->addMinutes($duration)->format('H:i'),
+                        ]);
+                    }
+                    $cursor->addMinutes(30);
+                }
+            }
+        }
+
+        return response()->json(['times' => $times->sortKeys()->values()]);
+    }
+
     public function store(Request $request)
     {
         $serviceIds = $request->input('service_ids', $request->input('service_id'));

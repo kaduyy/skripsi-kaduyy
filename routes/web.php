@@ -79,6 +79,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/booking', [App\Http\Controllers\BookingController::class, 'create'])
         ->name('booking.create');
 
+    Route::get('/booking/availability', [App\Http\Controllers\BookingController::class, 'availability'])
+        ->name('booking.availability');
+
     Route::post('/booking', [App\Http\Controllers\BookingController::class, 'store'])
         ->name('booking.store');
 

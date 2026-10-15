@@ -213,28 +213,19 @@
                 <p class="mb-3 hidden text-sm text-[#1A3B32]" data-loading-slots role="status">Memuat jadwal tersedia...</p>
 
                 @php $bookingDate = $selectedDateFrom ?: $today->toDateString(); @endphp
-                @if(!$selectedStylistId || empty($selectedServiceIds))
-                    <div class="text-center py-8 bg-gray-50 rounded-xl border border-gray-100">
-                        <p class="text-gray-500">Pilih layanan dan stylist untuk melihat jam yang tersedia.</p>
-                    </div>
-                @elseif($availableStartTimes->isEmpty())
-                    <div class="text-center py-8 bg-gray-50 rounded-xl border border-gray-100">
-                        <p class="text-gray-500">Tidak ada slot yang tersedia untuk tanggal ini. Silakan pilih tanggal lain.</p>
-                    </div>
-                @else
-                    <div class="max-w-sm">
-                        <label for="booking_time" class="mb-1.5 block text-sm font-medium text-gray-700">Jam Reservasi</label>
-                        <select id="booking_time" name="booking_time" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#E76F51] focus:ring-[#E76F51]">
-                            <option value="">Pilih jam</option>
-                            @foreach($availableStartTimes as $availableTime)
-                                <option value="{{ $availableTime['time'] }}" data-slot-id="{{ $availableTime['slot_id'] }}" @selected(old('booking_time') === $availableTime['time'])>
-                                    {{ $availableTime['label'] }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <input type="hidden" id="slot_id" name="slot_id" value="{{ old('slot_id') }}">
-                    </div>
-                @endif
+                <div data-slot-empty class="text-center py-8 bg-gray-50 rounded-xl border border-gray-100 {{ $selectedStylistId && !empty($selectedServiceIds) && $availableStartTimes->isNotEmpty() ? 'hidden' : '' }}">
+                    <p class="text-gray-500">{{ !$selectedStylistId || empty($selectedServiceIds) ? 'Pilih layanan dan stylist untuk melihat jam yang tersedia.' : 'Tidak ada slot yang tersedia untuk tanggal ini. Silakan pilih tanggal lain.' }}</p>
+                </div>
+                <div data-slot-picker class="max-w-sm {{ $selectedStylistId && !empty($selectedServiceIds) && $availableStartTimes->isNotEmpty() ? '' : 'hidden' }}">
+                    <label for="booking_time" class="mb-1.5 block text-sm font-medium text-gray-700">Jam Reservasi</label>
+                    <select id="booking_time" name="booking_time" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#E76F51] focus:ring-[#E76F51]">
+                        <option value="">Pilih jam</option>
+                        @foreach($availableStartTimes as $availableTime)
+                            <option value="{{ $availableTime['time'] }}" data-slot-id="{{ $availableTime['slot_id'] }}" @selected(old('booking_time') === $availableTime['time'])>{{ $availableTime['label'] }}</option>
+                        @endforeach
+                    </select>
+                    <input type="hidden" id="slot_id" name="slot_id" value="{{ old('slot_id') }}">
+                </div>
             </div>
             @error('slot_id') <span class="text-red-500 text-xs mt-2 block">{{ $message }}</span> @enderror
 
@@ -348,11 +339,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const countLabel = document.querySelector('[data-service-count]');
     const durationLabel = document.querySelector('[data-service-duration]');
     const loadingLabel = document.querySelector('[data-loading-slots]');
+    const slotPicker = document.querySelector('[data-slot-picker]');
+    const slotEmpty = document.querySelector('[data-slot-empty]');
     const form = document.querySelector('form[action="{{ route('booking.store') }}"]');
     const paymentInputs = Array.from(document.querySelectorAll('input[name="payment_method"]'));
     const cashWarning = document.querySelector('[data-cash-warning]');
     let reloadTimeout;
-    let reloading = false;
+    let loadingSlots = false;
 
     function updateSummary() {
         const selected = serviceInputs.filter(input => input.checked);
@@ -360,21 +353,43 @@ document.addEventListener('DOMContentLoaded', function () {
         durationLabel.textContent = selected.reduce((sum, input) => sum + Number(input.dataset.duration || 0), 0);
     }
 
-    function reloadAvailability() {
-        if (reloading) return;
-        // Existing controller expects date_from and date_to. Sending the same
-        // date retains compatibility while showing only one selected day.
+    async function reloadAvailability() {
+        if (loadingSlots) return;
         const params = new URLSearchParams();
         serviceInputs.filter(input => input.checked).forEach(input => params.append('service_ids[]', input.value));
         if (stylistSelect.value) params.set('stylist_id', stylistSelect.value);
-        if (dateInput.value) {
-            params.set('date_from', dateInput.value);
-            params.set('date_to', dateInput.value);
-        }
-        reloading = true;
+        if (dateInput.value) params.set('booking_date', dateInput.value);
+        loadingSlots = true;
         if (loadingLabel) loadingLabel.classList.remove('hidden');
-        if (form) form.querySelectorAll('input[name="slot_id"]').forEach(input => input.disabled = true);
-        window.location.assign(@json(route('booking.create')) + '?' + params.toString());
+        if (bookingTime) bookingTime.disabled = true;
+        try {
+            const response = await fetch(@json(route('booking.availability')) + '?' + params.toString(), {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!response.ok) throw new Error('Gagal memuat jadwal');
+            const data = await response.json();
+            bookingTime.innerHTML = '<option value="">Pilih jam</option>';
+            data.times.forEach(time => {
+                const option = new Option(time.label, time.time);
+                option.dataset.slotId = time.slot_id;
+                bookingTime.add(option);
+            });
+            slotInput.value = '';
+            const hasTimes = data.times.length > 0;
+            slotPicker.classList.toggle('hidden', !hasTimes);
+            slotEmpty.classList.toggle('hidden', hasTimes);
+            slotEmpty.querySelector('p').textContent = hasTimes
+                ? ''
+                : (data.reason || 'Tidak ada slot yang tersedia untuk tanggal ini. Silakan pilih tanggal lain.');
+        } catch (error) {
+            slotPicker.classList.add('hidden');
+            slotEmpty.classList.remove('hidden');
+            slotEmpty.querySelector('p').textContent = 'Jadwal tidak dapat dimuat. Silakan coba lagi.';
+        } finally {
+            loadingSlots = false;
+            if (loadingLabel) loadingLabel.classList.add('hidden');
+            if (bookingTime) bookingTime.disabled = false;
+        }
     }
 
     function queueReload() {
@@ -408,7 +423,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (form) {
         form.addEventListener('submit', function (event) {
-            if (reloading) { event.preventDefault(); return; }
+            if (loadingSlots) { event.preventDefault(); return; }
             if (!serviceInputs.some(input => input.checked)) {
                 event.preventDefault(); alert('Silakan pilih minimal satu layanan.'); return;
             }
