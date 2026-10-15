@@ -440,8 +440,10 @@ public function create(\Illuminate\Http\Request $request)
         return $coveredSlots->values();
     }
 
-    public function show(\App\Models\Booking $booking)
-    {
+public function show(\App\Models\Booking $booking)
+{
+        \App\Services\BookingStatusService::markExpired();
+
         // Pastikan hanya pemilik atau admin yang bisa melihat
         if ($booking->user_id !== auth()->id() && auth()->user()->role !== 'admin') {
             abort(403);

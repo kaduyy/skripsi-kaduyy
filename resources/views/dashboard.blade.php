@@ -57,15 +57,15 @@
                         </td>
                         <td class="px-6 py-4">
                             @if($booking->status == 'menunggu_pembayaran')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Menunggu Pembayaran</span>
+                                <span data-booking-status="{{ $booking->id }}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Menunggu Pembayaran</span>
                             @elseif($booking->status == 'dibayar')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">DP Terverifikasi</span>
+                                <span data-booking-status="{{ $booking->id }}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">DP Terverifikasi</span>
                             @elseif($booking->status == 'selesai')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Selesai</span>
+                                <span data-booking-status="{{ $booking->id }}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Selesai</span>
                             @elseif($booking->status == 'dibatalkan')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Dibatalkan</span>
+                                <span data-booking-status="{{ $booking->id }}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Dibatalkan</span>
                             @elseif($booking->status == 'tidak_hadir')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Tidak Hadir</span>
+                                <span data-booking-status="{{ $booking->id }}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Tidak Hadir</span>
                             @endif
                         </td>
                         <td class="px-6 py-4 text-right">
@@ -88,4 +88,30 @@
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const labels = {
+        menunggu_pembayaran: ['Menunggu Pembayaran', 'bg-yellow-100', 'text-yellow-800'],
+        dibayar: ['DP Terverifikasi', 'bg-blue-100', 'text-blue-800'],
+        selesai: ['Selesai', 'bg-green-100', 'text-green-800'],
+        dibatalkan: ['Dibatalkan', 'bg-red-100', 'text-red-800'],
+        tidak_hadir: ['Tidak Hadir', 'bg-gray-100', 'text-gray-700']
+    };
+    const refreshStatuses = async () => {
+        try {
+            const response = await fetch('{{ route('dashboard.status') }}', { headers: { Accept: 'application/json' } });
+            if (!response.ok) return;
+            const statuses = await response.json();
+            Object.entries(statuses).forEach(([id, status]) => {
+                const badge = document.querySelector(`[data-booking-status="${id}"]`);
+                const label = labels[status];
+                if (!badge || !label) return;
+                badge.textContent = label[0];
+                badge.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${label[1]} ${label[2]}`;
+            });
+        } catch (_) { /* status tetap memakai data terakhir */ }
+    };
+    setInterval(refreshStatuses, 15000);
+});
+</script>
 @endsection

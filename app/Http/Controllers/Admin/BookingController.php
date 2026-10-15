@@ -24,6 +24,8 @@ class BookingController extends Controller
     // =====================================================
     public function index(Request $request)
     {
+        \App\Services\BookingStatusService::markExpired();
+
         $status = $request->get('status');
 
         $allowedStatuses = [
@@ -167,6 +169,8 @@ class BookingController extends Controller
     // =====================================================
     public function show(Booking $booking)
     {
+        \App\Services\BookingStatusService::markExpired();
+
         $booking->load([
             'user',
             'stylist',

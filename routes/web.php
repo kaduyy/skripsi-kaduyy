@@ -66,6 +66,8 @@ Route::get('/galeri', function () {
 
 Route::get('/dashboard', function () {
 
+    \App\Services\BookingStatusService::markExpired();
+
     $bookings = \App\Models\Booking::where('user_id', auth()->id())
         ->with(['services', 'slot', 'payment'])
         ->orderBy('created_at', 'desc')
@@ -74,6 +76,15 @@ Route::get('/dashboard', function () {
     return view('dashboard', compact('bookings'));
 
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/dashboard/status', function () {
+    \App\Services\BookingStatusService::markExpired();
+
+    return response()->json(
+        \App\Models\Booking::where('user_id', auth()->id())
+            ->pluck('status', 'id')
+    );
+})->middleware(['auth', 'verified'])->name('dashboard.status');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/booking', [App\Http\Controllers\BookingController::class, 'create'])
