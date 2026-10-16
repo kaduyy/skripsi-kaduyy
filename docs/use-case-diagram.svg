@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1300" viewBox="0 0 1900 1300">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L10,3 L0,6 z" fill="#334155"/></marker>
+    <marker id="arrowDashed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L10,3 L0,6 z" fill="#64748b"/></marker>
+    <style>
+      .title{font:700 30px Arial,sans-serif;fill:#0f172a}.subtitle{font:16px Arial,sans-serif;fill:#475569}
+      .boundary{fill:#f8fafc;stroke:#0f172a;stroke-width:3}.section{font:700 18px Arial,sans-serif;fill:#0f766e}
+      .uc{fill:#fff;stroke:#0f766e;stroke-width:2}.uct{font:15px Arial,sans-serif;fill:#0f172a;text-anchor:middle}
+      .actor{font:16px Arial,sans-serif;fill:#0f172a;text-anchor:middle}.line{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#arrow)}
+      .rel{stroke:#64748b;stroke-width:2;stroke-dasharray:8 6;fill:none;marker-end:url(#arrowDashed)}
+      .label{font:italic 13px Arial,sans-serif;fill:#475569}.legend{font:14px Arial,sans-serif;fill:#334155}
+    </style>
+  </defs>
+  <rect width="1900" height="1300" fill="#ffffff"/>
+  <text x="950" y="45" class="title" text-anchor="middle">Use Case Diagram — Alan Salon</text>
+  <text x="950" y="72" class="subtitle" text-anchor="middle">Sistem reservasi salon, pembayaran, jadwal stylist, dan administrasi</text>
+
+  <!-- system boundary -->
+  <rect x="300" y="105" width="1300" height="1080" rx="18" class="boundary"/>
+  <text x="950" y="140" class="title" text-anchor="middle" font-size="24">Sistem Alan Salon</text>
+  <line x1="330" y1="165" x2="1570" y2="165" stroke="#cbd5e1"/>
+  <text x="350" y="198" class="section">Layanan pelanggan</text>
+  <text x="980" y="198" class="section">Layanan admin dan sistem</text>
+
+  <!-- customer use cases -->
+  <ellipse cx="500" cy="260" rx="145" ry="35" class="uc"/><text x="500" y="255" class="uct"><tspan x="500">Lihat informasi</tspan><tspan x="500" dy="19">salon</tspan></text>
+  <ellipse cx="500" cy="355" rx="145" ry="35" class="uc"/><text x="500" y="350" class="uct"><tspan x="500">Kelola akun dan</tspan><tspan x="500" dy="19">autentikasi</tspan></text>
+  <ellipse cx="500" cy="470" rx="150" ry="35" class="uc"/><text x="500" y="465" class="uct"><tspan x="500">Buat reservasi</tspan><tspan x="500" dy="19">pelanggan</tspan></text>
+  <ellipse cx="500" cy="575" rx="150" ry="35" class="uc"/><text x="500" y="570" class="uct"><tspan x="500">Lihat status/detail</tspan><tspan x="500" dy="19">reservasi</tspan></text>
+  <ellipse cx="500" cy="680" rx="150" ry="35" class="uc"/><text x="500" y="675" class="uct"><tspan x="500">Unggah bukti</tspan><tspan x="500" dy="19">pembayaran</tspan></text>
+  <ellipse cx="500" cy="785" rx="150" ry="35" class="uc"/><text x="500" y="780" class="uct"><tspan x="500">Batalkan</tspan><tspan x="500" dy="19">reservasi</tspan></text>
+  <ellipse cx="500" cy="890" rx="150" ry="35" class="uc"/><text x="500" y="885" class="uct"><tspan x="500">Beri ulasan</tspan><tspan x="500" dy="19">layanan</tspan></text>
+
+  <!-- included booking cases -->
+  <ellipse cx="820" cy="300" rx="150" ry="32" class="uc"/><text x="820" y="295" class="uct"><tspan x="820">Pilih layanan</tspan><tspan x="820" dy="18">stylist, tanggal, jam</tspan></text>
+  <ellipse cx="820" cy="395" rx="150" ry="32" class="uc"/><text x="820" y="390" class="uct"><tspan x="820">Hitung harga dan</tspan><tspan x="820" dy="18">durasi</tspan></text>
+  <ellipse cx="820" cy="490" rx="150" ry="32" class="uc"/><text x="820" y="485" class="uct"><tspan x="820">Cek ketersediaan</tspan><tspan x="820" dy="18">slot</tspan></text>
+  <ellipse cx="820" cy="585" rx="150" ry="32" class="uc"/><text x="820" y="580" class="uct"><tspan x="820">Simpan booking dan</tspan><tspan x="820" dy="18">pembayaran</tspan></text>
+
+  <!-- admin/system cases -->
+  <ellipse cx="1160" cy="250" rx="155" ry="32" class="uc"/><text x="1160" y="245" class="uct"><tspan x="1160">Kelola layanan</tspan><tspan x="1160" dy="18">dan harga</tspan></text>
+  <ellipse cx="1160" cy="335" rx="155" ry="32" class="uc"/><text x="1160" y="330" class="uct"><tspan x="1160">Kelola stylist</tspan><tspan x="1160" dy="18">dan jadwal kerja</tspan></text>
+  <ellipse cx="1160" cy="420" rx="155" ry="32" class="uc"/><text x="1160" y="415" class="uct"><tspan x="1160">Kelola slot</tspan><tspan x="1160" dy="18">reservasi</tspan></text>
+  <ellipse cx="1160" cy="505" rx="155" ry="32" class="uc"/><text x="1160" y="500" class="uct"><tspan x="1160">Kelola reservasi</tspan><tspan x="1160" dy="18">dan status layanan</tspan></text>
+  <ellipse cx="1160" cy="590" rx="155" ry="32" class="uc"/><text x="1160" y="585" class="uct"><tspan x="1160">Verifikasi</tspan><tspan x="1160" dy="18">pembayaran</tspan></text>
+  <ellipse cx="1160" cy="675" rx="155" ry="32" class="uc"/><text x="1160" y="670" class="uct"><tspan x="1160">Selesaikan</tspan><tspan x="1160" dy="18">layanan</tspan></text>
+  <ellipse cx="1160" cy="760" rx="155" ry="32" class="uc"/><text x="1160" y="755" class="uct"><tspan x="1160">Kelola pengguna,</tspan><tspan x="1160" dy="18">galeri, dan laporan</tspan></text>
+  <ellipse cx="1160" cy="880" rx="155" ry="32" class="uc"/><text x="1160" y="875" class="uct"><tspan x="1160">Tutup booking</tspan><tspan x="1160" dy="18">yang waktunya lewat</tspan></text>
+  <ellipse cx="1160" cy="980" rx="155" ry="32" class="uc"/><text x="1160" y="975" class="uct"><tspan x="1160">Kirim notifikasi</tspan><tspan x="1160" dy="18">WhatsApp</tspan></text>
+
+  <!-- actors -->
+  <g transform="translate(125,390)"><circle cx="0" cy="0" r="18" fill="none" stroke="#0f172a" stroke-width="3"/><path d="M0 18v48M-30 38h60M0 66l-25 42M0 66l25 42" stroke="#0f172a" stroke-width="3" fill="none"/><text x="0" y="140" class="actor">Tamu</text></g>
+  <g transform="translate(125,700)"><circle cx="0" cy="0" r="18" fill="none" stroke="#0f172a" stroke-width="3"/><path d="M0 18v48M-30 38h60M0 66l-25 42M0 66l25 42" stroke="#0f172a" stroke-width="3" fill="none"/><text x="0" y="140" class="actor">Pelanggan</text></g>
+  <g transform="translate(1770,510)"><circle cx="0" cy="0" r="18" fill="none" stroke="#0f172a" stroke-width="3"/><path d="M0 18v48M-30 38h60M0 66l-25 42M0 66l25 42" stroke="#0f172a" stroke-width="3" fill="none"/><text x="0" y="140" class="actor">Admin</text></g>
+  <g transform="translate(1770,930)"><circle cx="0" cy="0" r="18" fill="none" stroke="#0f172a" stroke-width="3"/><path d="M0 18v48M-30 38h60M0 66l-25 42M0 66l25 42" stroke="#0f172a" stroke-width="3" fill="none"/><text x="0" y="140" class="actor">WhatsApp</text></g>
+
+  <!-- actor associations -->
+  <path d="M145 390 L350 260" class="line"/><path d="M145 390 L350 355" class="line"/>
+  <path d="M145 700 L350 470" class="line"/><path d="M145 700 L350 575" class="line"/><path d="M145 700 L350 680" class="line"/><path d="M145 700 L350 785" class="line"/><path d="M145 700 L350 890" class="line"/>
+  <path d="M1750 510 L1315 250" class="line"/><path d="M1750 510 L1315 335" class="line"/><path d="M1750 510 L1315 420" class="line"/><path d="M1750 510 L1315 505" class="line"/><path d="M1750 510 L1315 590" class="line"/><path d="M1750 510 L1315 675" class="line"/><path d="M1750 510 L1315 760" class="line"/>
+  <path d="M1750 930 L1315 980" class="line"/>
+
+  <!-- include relations -->
+  <path d="M645 470 C700 425 730 335 700 300" class="rel"/><text x="675" y="390" class="label">&lt;&lt;include&gt;&gt;</text>
+  <path d="M645 470 C710 470 720 420 700 395" class="rel"/><text x="665" y="450" class="label">&lt;&lt;include&gt;&gt;</text>
+  <path d="M645 470 C710 500 720 495 700 490" class="rel"/><text x="665" y="520" class="label">&lt;&lt;include&gt;&gt;</text>
+  <path d="M645 470 C720 560 720 580 700 585" class="rel"/><text x="670" y="575" class="label">&lt;&lt;include&gt;&gt;</text>
+  <path d="M1315 505 C1370 530 1370 575 1315 590" class="rel"/><text x="1365" y="560" class="label">&lt;&lt;include&gt;&gt;</text>
+  <path d="M1315 505 C1390 600 1390 660 1315 675" class="rel"/><text x="1375" y="650" class="label">&lt;&lt;include&gt;&gt;</text>
+  <path d="M1315 505 C1400 690 1400 850 1315 880" class="rel"/><text x="1390" y="800" class="label">&lt;&lt;include&gt;&gt;</text>
+
+  <!-- extend relations -->
+  <path d="M650 680 C760 650 760 520 645 490" class="rel"/><text x="720" y="615" class="label">&lt;&lt;extend&gt;&gt;</text>
+  <path d="M650 785 C780 760 800 550 645 520" class="rel"/><text x="760" y="705" class="label">&lt;&lt;extend&gt;&gt;</text>
+  <path d="M650 890 C820 850 900 630 645 555" class="rel"/><text x="815" y="780" class="label">&lt;&lt;extend&gt;&gt;</text>
+  <path d="M1005 590 C1050 590 1040 590 1005 590" class="rel"/><text x="1020" y="570" class="label">&lt;&lt;extend&gt;&gt;</text>
+  <path d="M1315 590 C1430 550 1460 430 1315 505" class="rel"/><text x="1420" y="485" class="label">&lt;&lt;extend&gt;&gt;</text>
+
+  <!-- legend -->
+  <rect x="350" y="1100" width="1200" height="58" rx="8" fill="#ecfeff" stroke="#99f6e4"/>
+  <line x1="380" y1="1125" x2="480" y2="1125" class="line"/><text x="495" y="1130" class="legend">Asosiasi aktor</text>
+  <line x1="680" y1="1125" x2="780" y2="1125" class="rel"/><text x="795" y="1130" class="legend">Relasi include / extend (arah panah menuju use case yang dipanggil)</text>
+  <text x="950" y="1180" class="subtitle" text-anchor="middle">Catatan: extend digunakan untuk alur opsional atau kondisional; include digunakan untuk langkah wajib.</text>
+</svg>

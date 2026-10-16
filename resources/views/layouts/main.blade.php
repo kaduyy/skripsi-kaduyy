@@ -44,11 +44,6 @@
             </nav>
 
             <div class="hidden items-center gap-5 md:flex">
-                <a href="https://wa.me/6281255552938" target="_blank" class="inline-flex items-center gap-2 text-sm font-medium text-white/80 transition hover:text-white" title="Chat via WhatsApp">
-                    <i class="fa-brands fa-whatsapp text-lg text-[#25D366]"></i>
-                    <span>(+62) 812-5555-2938</span>
-                </a>
-
                 @auth
                     <div class="flex items-center gap-4">
                         <a href="{{ url('/dashboard') }}" class="text-sm font-medium text-white/80 hover:text-white">Dashboard</a>
@@ -64,9 +59,10 @@
                         </form>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" class="inline-flex items-center gap-2 rounded-md bg-[#E76F51] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#d85f43]">
-                        <span>Get Started</span>
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('login') }}" class="text-sm font-medium text-white/80 transition hover:text-white">Masuk</a>
+                        <a href="{{ route('register') }}" class="inline-flex items-center gap-2 rounded-md bg-[#E76F51] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#d85f43]">Daftar</a>
+                    </div>
                 @endauth
             </div>
 
@@ -80,9 +76,10 @@
                         </button>
                     </form>
                 @else
-                    <a href="{{ route('login') }}" class="rounded-full bg-[#E76F51] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
-                        Masuk
-                    </a>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('login') }}" class="rounded-full border border-white/20 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">Masuk</a>
+                        <a href="{{ route('register') }}" class="rounded-full bg-[#E76F51] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">Daftar</a>
+                    </div>
                 @endauth
             </div>
         </div>
@@ -116,13 +113,6 @@
                     </div>
                     <a href="https://www.google.com/maps/search/?api=1&query=Alan%27s+Art+of+Hair+Batam" target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex text-sm font-medium text-emerald-400 transition hover:text-emerald-300">
                         Buka lokasi di Google Maps
-                    </a>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-400 mb-1">WhatsApp & Telepon</p>
-                    <a href="https://wa.me/6281255552938" target="_blank" class="font-medium text-emerald-400 hover:text-emerald-300 transition inline-flex items-center gap-2">
-                        <i class="fa-brands fa-whatsapp text-emerald-400 text-lg"></i>
-                        <span>+62 812-5555-2938</span>
                     </a>
                 </div>
             </div>

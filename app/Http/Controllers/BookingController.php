@@ -61,9 +61,18 @@ public function create(\Illuminate\Http\Request $request)
     // Gunakan waktu Indonesia (WIB)
     $now = \Carbon\Carbon::now('Asia/Jakarta');
         $today = $now->copy()->startOfDay();
-        $maximumBookingDate = $today->copy()->addDays(30);
-
-        (new \App\Services\WorkingHoursService())->ensureDefaultSlots($today, $maximumBookingDate);
+    $requestedEndDate = $selectedDateTo ?: $selectedDateFrom ?: $today->toDateString();
+    try {
+        $slotGenerationEnd = \Carbon\Carbon::parse($requestedEndDate, 'Asia/Jakarta')->startOfDay();
+    } catch (\Throwable $e) {
+        $slotGenerationEnd = $today->copy();
+    }
+    if ($slotGenerationEnd->lt($today)) {
+        $slotGenerationEnd = $today->copy();
+    }
+    // Buat slot hanya untuk tanggal yang diminta agar rentang tanpa batas
+    // tidak memicu pembuatan data untuk seluruh periode di antaranya.
+    (new \App\Services\WorkingHoursService())->ensureDefaultSlots($slotGenerationEnd, $slotGenerationEnd);
 
     // Hapus slot yang sudah lewat dan tidak memiliki booking
     \App\Models\Slot::where('tanggal', '<', $today->toDateString())
@@ -87,7 +96,6 @@ public function create(\Illuminate\Http\Request $request)
                 });
         })
         ->where('status', '!=', 'tutup')
-        ->whereDate('tanggal', '<=', $maximumBookingDate->toDateString())
         ->when($selectedDateFrom, fn ($query) => $query->whereDate('tanggal', '>=', $selectedDateFrom))
         ->when($selectedDateTo, fn ($query) => $query->whereDate('tanggal', '<=', $selectedDateTo))
         ->when($selectedStylistId, fn ($query) => $query->where('stylist_id', $selectedStylistId), fn ($query) => $query->whereRaw('1 = 0'))
@@ -134,6 +142,7 @@ public function create(\Illuminate\Http\Request $request)
             ->all();
     }
 
+    $maximumBookingDate = null;
     return view('booking.create', compact('services', 'stylists', 'slots', 'slotAvailability', 'availableStartTimes', 'selectedServiceIds', 'selectedStylistId', 'selectedDurationMinutes', 'selectedDateFrom', 'selectedDateTo', 'today', 'maximumBookingDate'));
 }
 
@@ -143,7 +152,6 @@ public function create(\Illuminate\Http\Request $request)
         $stylistId = $request->integer('stylist_id');
         $date = $request->query('booking_date');
         $today = \Carbon\Carbon::now('Asia/Jakarta')->startOfDay();
-        $maximumDate = $today->copy()->addDays(30);
 
         if (! $stylistId || ! $date || ! count($serviceIds)) {
             return response()->json(['times' => [], 'reason' => 'Pilih layanan dan stylist untuk melihat jam yang tersedia.']);
@@ -155,11 +163,12 @@ public function create(\Illuminate\Http\Request $request)
             return response()->json(['times' => [], 'reason' => 'Tanggal reservasi tidak valid.'], 422);
         }
 
-        if ($bookingDate < $today->toDateString() || $bookingDate > $maximumDate->toDateString()) {
-            return response()->json(['times' => [], 'reason' => 'Tanggal reservasi berada di luar rentang yang tersedia.']);
+        if ($bookingDate < $today->toDateString()) {
+            return response()->json(['times' => [], 'reason' => 'Tanggal reservasi tidak boleh sebelum hari ini.']);
         }
 
-        (new \App\Services\WorkingHoursService())->ensureDefaultSlots($today, $maximumDate);
+        $requestedDate = \Carbon\Carbon::parse($bookingDate, 'Asia/Jakarta')->startOfDay();
+        (new \App\Services\WorkingHoursService())->ensureDefaultSlots($requestedDate, $requestedDate);
         $duration = (int) \App\Models\Service::whereIn('id', $serviceIds)
             ->where('status', 'aktif')->sum('durasi_menit');
         $slots = \App\Models\Slot::whereDate('tanggal', $bookingDate)
@@ -211,11 +220,10 @@ public function create(\Illuminate\Http\Request $request)
 
         try {
             $booking = \DB::transaction(function () use ($serviceIds, $validated, $now, $transactionGroupId) {
-                $maximumBookingDate = $now->copy()->startOfDay()->addDays(30);
                 $requestedSlot = \App\Models\Slot::findOrFail($validated['slot_id']);
                 $bookingDate = \Carbon\Carbon::parse($validated['booking_date'] ?? $requestedSlot->tanggal, 'Asia/Jakarta')->toDateString();
-                if ($bookingDate < $now->toDateString() || $bookingDate > $maximumBookingDate->toDateString()) {
-                    throw new \RuntimeException('Reservasi hanya dapat dibuat untuk hari ini sampai maksimal 30 hari ke depan.');
+                if ($bookingDate < $now->toDateString()) {
+                    throw new \RuntimeException('Reservasi tidak dapat dibuat untuk tanggal yang sudah lewat.');
                 }
                 if ((int) $requestedSlot->stylist_id !== (int) $validated['stylist_id'] || $requestedSlot->tanggal !== $bookingDate) {
                     throw new \RuntimeException('Stylist, tanggal, dan slot waktu yang dipilih tidak sesuai.');
